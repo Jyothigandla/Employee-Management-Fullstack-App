@@ -26,7 +26,6 @@ pipeline {
             steps {
                 dir("${APP_DIR}/frontend") {
                     sh 'npm install'
-                    sh 'chmod +x node_modules/react-scripts/bin/react-scripts.js'
                     sh 'npm run build'
                 }
             }
@@ -44,18 +43,21 @@ pipeline {
 
         stage('Verify') {
             steps {
-                sh 'docker ps'
+                sh '''
+                    docker ps
+                    docker compose ps
+                '''
             }
         }
     }
 
     post {
         success {
-            echo 'Deployment completed successfully!'
+            echo '✅ Deployment completed successfully!'
         }
 
         failure {
-            echo 'Deployment failed.'
+            echo '❌ Deployment failed.'
         }
 
         always {
