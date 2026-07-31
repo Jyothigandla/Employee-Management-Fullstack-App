@@ -9,25 +9,30 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'master',
+                git(
+                    branch: 'master',
+                    credentialsId: 'github-creds',
                     url: 'https://github.com/Jyothigandla/Employee-Management-Fullstack-App.git'
+                )
             }
         }
 
         stage('Build Backend') {
             steps {
-                dir("${APP_DIR}/backend") {
-                    sh 'mvn clean package -DskipTests'
-                }
+                sh """
+                    cd ${APP_DIR}/backend
+                    mvn clean package -DskipTests
+                """
             }
         }
 
         stage('Build Frontend') {
             steps {
-                dir("${APP_DIR}/frontend") {
-                    sh 'npm install'
-                    sh 'npm run build'
-                }
+                sh """
+                    cd ${APP_DIR}/frontend
+                    npm install
+                    npm run build
+                """
             }
         }
 
@@ -43,25 +48,44 @@ pipeline {
 
         stage('Verify') {
             steps {
-                sh '''
+                sh """
+                    echo "========== Docker Containers =========="
                     docker ps
-                    docker compose ps
-                '''
+
+                    echo ""
+                    echo "========== Docker Compose =========="
+                    docker compose -f ${APP_DIR}/docker-compose.yml ps
+
+                    echo ""
+                    echo "========== Backend =========="
+                    curl -I http://localhost:8081/swagger-ui/index.html || true
+
+                    echo ""
+                    echo "========== Frontend =========="
+                    curl -I http://localhost:3000 || true
+                """
             }
         }
     }
 
     post {
+
         success {
-            echo '✅ Deployment completed successfully!'
+            echo "===================================="
+            echo "Deployment completed successfully!"
+            echo "===================================="
         }
 
         failure {
-            echo '❌ Deployment failed.'
+            echo "===================================="
+            echo "Deployment failed!"
+            echo "===================================="
         }
 
         always {
-            sh 'docker ps -a || true'
+            sh """
+                docker ps -a || true
+            """
         }
     }
 }
