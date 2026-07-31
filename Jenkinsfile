@@ -16,7 +16,7 @@ pipeline {
 
         stage('Build Backend') {
             steps {
-                dir('backend') {
+                dir("${APP_DIR}/backend") {
                     sh 'mvn clean package -DskipTests'
                 }
             }
@@ -24,14 +24,14 @@ pipeline {
 
         stage('Build Frontend') {
             steps {
-                dir('frontend') {
+                dir("${APP_DIR}/frontend") {
                     sh 'npm install'
                     sh 'npm run build'
                 }
             }
         }
 
-        stage('Deploy with Docker Compose') {
+        stage('Deploy') {
             steps {
                 dir("${APP_DIR}") {
                     sh 'docker compose down'
@@ -40,7 +40,7 @@ pipeline {
             }
         }
 
-        stage('Verify Deployment') {
+        stage('Verify') {
             steps {
                 sh 'docker ps'
             }
@@ -49,11 +49,11 @@ pipeline {
 
     post {
         success {
-            echo 'Application deployed successfully!'
+            echo 'Deployment completed successfully!'
         }
 
         failure {
-            echo 'Pipeline failed.'
+            echo 'Deployment failed.'
         }
     }
 }
