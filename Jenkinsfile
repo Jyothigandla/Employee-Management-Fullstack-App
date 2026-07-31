@@ -26,6 +26,7 @@ pipeline {
             steps {
                 dir("${APP_DIR}/frontend") {
                     sh 'npm install'
+                    sh 'chmod +x node_modules/react-scripts/bin/react-scripts.js'
                     sh 'npm run build'
                 }
             }
@@ -33,10 +34,11 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                dir("${APP_DIR}") {
-                    sh 'docker compose down'
-                    sh 'docker compose up -d --build'
-                }
+                sh """
+                    cd ${APP_DIR}
+                    docker compose down || true
+                    docker compose up -d --build
+                """
             }
         }
 
@@ -54,6 +56,10 @@ pipeline {
 
         failure {
             echo 'Deployment failed.'
+        }
+
+        always {
+            sh 'docker ps -a || true'
         }
     }
 }
